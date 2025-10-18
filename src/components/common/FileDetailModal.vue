@@ -2,11 +2,16 @@
   <transition name="fade">
     <div
       v-if="visible"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="$emit('close')"
+      class="fixed inset-0 flex items-center justify-center z-50 p-4 overflow-hidden"
     >
+      <!-- 放大10%的黑色遮罩 -->
+      <div 
+        class="absolute backdrop-overlay"
+        @click="$emit('close')"
+      ></div>
+      
       <div
-        class="p-8 rounded-2xl max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 ease-out backdrop-filter backdrop-blur-lg overflow-hidden"
+        class="p-8 rounded-2xl max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 ease-out backdrop-filter backdrop-blur-lg overflow-hidden relative z-10"
         :class="[isDarkMode ? 'bg-gray-800 bg-opacity-70' : 'bg-white bg-opacity-95']"
       >
         <h3
@@ -108,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
+import { inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { FileIcon, CalendarIcon, HardDriveIcon, DownloadIcon } from 'lucide-vue-next'
 import QRCode from 'qrcode.vue'
@@ -133,11 +138,25 @@ interface Emits {
   'preview-content': []
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 defineEmits<Emits>()
 const { t } = useI18n()
 const isDarkMode = inject('isDarkMode')
+const setBlurLevel = inject<(level: 'none' | 'light' | 'heavy') => void>('setBlurLevel')
 const baseUrl = window.location.origin
+
+// 监听模态框的打开/关闭，控制背景模糊
+watch(() => props.visible, (newValue) => {
+  if (setBlurLevel) {
+    if (newValue) {
+      // 打开模态框时使用重度模糊
+      setBlurLevel('heavy')
+    } else {
+      // 关闭模态框时取消模糊
+      setBlurLevel('none')
+    }
+  }
+})
 
 const getDownloadUrl = (record: FileRecord) => {
   if (record.downloadUrl) {
@@ -160,6 +179,18 @@ const getQRCodeValue = (record: FileRecord) => {
 </script>
 
 <style scoped>
+/* 放大10%的黑色遮罩 */
+.backdrop-overlay {
+  position: fixed;
+  top: -5%;
+  left: -5%;
+  width: 110%;
+  height: 110%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;

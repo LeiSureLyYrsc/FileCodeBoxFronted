@@ -491,7 +491,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, onMounted, computed } from 'vue'
+import { ref, inject, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   SendIcon,
@@ -542,6 +542,7 @@ const config: Config = JSON.parse(localStorage.getItem('config') || '{}') as Con
 
 const router = useRouter()
 const isDarkMode = inject('isDarkMode')
+const setBlurLevel = inject<(level: 'none' | 'light' | 'heavy') => void>('setBlurLevel')
 const fileDataStore = useFileDataStore()
 
 const sendType = ref('file')
@@ -1048,6 +1049,19 @@ const incrementValue = (delta: number) => {
     expirationValue.value = newValue.toString()
   }
 }
+
+// 监听文件详情弹窗的打开/关闭，控制背景模糊层次
+watch(selectedRecord, (newValue) => {
+  if (setBlurLevel) {
+    if (newValue) {
+      // 打开文件详情时使用重度模糊
+      setBlurLevel('heavy')
+    } else {
+      // 关闭文件详情时取消模糊
+      setBlurLevel('none')
+    }
+  }
+})
 
 // 使用 onMounted 钩子延迟加载一些非关键资源或初始化
 onMounted(() => {

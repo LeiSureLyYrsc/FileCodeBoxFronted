@@ -18,11 +18,16 @@ const alertStore = useAlertStore()
 // 使用主题 composable
 const { isDarkMode, toggleTheme, initTheme } = useTheme()
 
-// 背景模糊状态
-const isBackgroundBlurred = ref(false)
+// 背景模糊状态 - 支持两个层次: 'none', 'light', 'heavy'
+const blurLevel = ref<'none' | 'light' | 'heavy'>('none')
 
-// 监听焦点事件 - 检测交互元素
+// 监听焦点事件 - 检测交互元素（轻度模糊）
 const handleFocusIn = (e: FocusEvent) => {
+  // 如果当前处于重度模糊状态（文件详情弹窗打开），不响应
+  if (blurLevel.value === 'heavy') {
+    return
+  }
+  
   const target = e.target as HTMLElement
   // 检查是否是目标交互元素
   if (
@@ -32,24 +37,33 @@ const handleFocusIn = (e: FocusEvent) => {
     target.closest('[data-file-upload]') ||
     target.closest('.file-upload-area')
   ) {
-    isBackgroundBlurred.value = true
+    blurLevel.value = 'light'
   }
 }
 
 const handleFocusOut = () => {
-  isBackgroundBlurred.value = false
+  // 如果当前处于重度模糊状态（文件详情弹窗打开），不响应
+  if (blurLevel.value === 'heavy') {
+    return
+  }
+  blurLevel.value = 'none'
 }
 
-// 监听点击事件 - 检测文件上传区域点击
+// 监听点击事件 - 检测文件上传区域点击（轻度模糊）
 const handleClick = (e: MouseEvent) => {
+  // 如果当前处于重度模糊状态（文件详情弹窗打开），不响应
+  if (blurLevel.value === 'heavy') {
+    return
+  }
+  
   const target = e.target as HTMLElement
   if (
     target.closest('[data-file-upload]') ||
     target.closest('.file-upload-area')
   ) {
-    isBackgroundBlurred.value = true
+    blurLevel.value = 'light'
     setTimeout(() => {
-      isBackgroundBlurred.value = false
+      blurLevel.value = 'none'
     }, 3000)
   }
 }
@@ -106,6 +120,9 @@ router.afterEach(() => {
 provide('isDarkMode', isDarkMode)
 provide('toggleTheme', toggleTheme)
 provide('isLoading', isLoading)
+provide('setBlurLevel', (level: 'none' | 'light' | 'heavy') => {
+  blurLevel.value = level
+})
 </script>
 
 <template>
@@ -113,7 +130,11 @@ provide('isLoading', isLoading)
     <!-- 背景图片 -->
     <div 
       class="background-image"
-      :class="{ 'blurred': isBackgroundBlurred, 'dark-mode': isDarkMode }"
+      :class="{ 
+        'blur-light': blurLevel === 'light', 
+        'blur-heavy': blurLevel === 'heavy',
+        'dark-mode': isDarkMode 
+      }"
     ></div>
 
     <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
@@ -162,14 +183,26 @@ provide('isLoading', isLoading)
   filter: brightness(0.6);
 }
 
-.background-image.blurred {
-  transform: scale(1.1);
-  filter: blur(10px);
+/* 轻度模糊 - 用于输入框等交互元素 */
+.background-image.blur-light {
+  transform: scale(1.08);
+  filter: blur(8px);
 }
 
-/* 暗色模式 + 模糊状态 */
-.background-image.dark-mode.blurred {
-  filter: brightness(0.6) blur(10px);
+/* 重度模糊 - 用于模态框等强调场景 */
+.background-image.blur-heavy {
+  transform: scale(1.15);
+  filter: blur(12px);
+}
+
+/* 暗色模式 + 轻度模糊 */
+.background-image.dark-mode.blur-light {
+  filter: brightness(0.6) blur(8px);
+}
+
+/* 暗色模式 + 重度模糊 */
+.background-image.dark-mode.blur-heavy {
+  filter: brightness(0.6) blur(12px);
 }
 
 .router-view-wrapper {
