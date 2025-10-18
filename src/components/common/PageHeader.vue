@@ -2,11 +2,13 @@
   <div class="text-center">
     <div class="flex justify-center mb-8">
       <div
-        class="rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-1 animate-spin-slow"
+        class="rounded-full from-indigo-500 via-purple-500 to-pink-500 p-1 animate-spin-slow"
       >
-        <div class="rounded-full bg-gray-900 p-2">
-          <BoxIcon class="w-8 h-8 text-white" />
-        </div>
+          <img 
+            src="/assets/logo_small.jpg" 
+            :alt="title"
+            class="w-15 h-20 object-contain rounded-full" 
+          />
       </div>
     </div>
     <h2
@@ -25,7 +27,6 @@
 
 <script setup lang="ts">
 import { inject } from 'vue'
-import { BoxIcon } from 'lucide-vue-next'
 
 interface Props {
   title: string
@@ -42,16 +43,21 @@ const isDarkMode = inject('isDarkMode')
 </script>
 
 <style scoped>
-@keyframes spin-slow {
-  from {
+@keyframes spin-pause {
+  /* 0-0.2秒: 快速旋转5圈 (1800度 = 5 * 360度) */
+  0% {
     transform: rotate(0deg);
   }
-  to {
-    transform: rotate(360deg);
+  35% {
+    transform: rotate(1800deg);
+  }
+  /* 0.2-2.2秒: 停止不动 */
+  35%, 100% {
+    transform: rotate(1800deg);
   }
 }
 
 .animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
+  animation: spin-pause 2s linear infinite;
 }
 </style>

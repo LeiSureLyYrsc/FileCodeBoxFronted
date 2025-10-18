@@ -18,6 +18,42 @@ const alertStore = useAlertStore()
 // 使用主题 composable
 const { isDarkMode, toggleTheme, initTheme } = useTheme()
 
+// 背景模糊状态
+const isBackgroundBlurred = ref(false)
+
+// 监听焦点事件 - 检测交互元素
+const handleFocusIn = (e: FocusEvent) => {
+  const target = e.target as HTMLElement
+  // 检查是否是目标交互元素
+  if (
+    target.tagName === 'INPUT' ||
+    target.tagName === 'TEXTAREA' ||
+    target.tagName === 'SELECT' ||
+    target.closest('[data-file-upload]') ||
+    target.closest('.file-upload-area')
+  ) {
+    isBackgroundBlurred.value = true
+  }
+}
+
+const handleFocusOut = () => {
+  isBackgroundBlurred.value = false
+}
+
+// 监听点击事件 - 检测文件上传区域点击
+const handleClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (
+    target.closest('[data-file-upload]') ||
+    target.closest('.file-upload-area')
+  ) {
+    isBackgroundBlurred.value = true
+    setTimeout(() => {
+      isBackgroundBlurred.value = false
+    }, 3000)
+  }
+}
+
 // 清理函数
 let cleanupThemeListener: (() => void) | null = null
 
@@ -37,6 +73,11 @@ onMounted(() => {
       }
     }
   })
+
+  // 添加交互事件监听
+  document.addEventListener('focusin', handleFocusIn)
+  document.addEventListener('focusout', handleFocusOut)
+  document.addEventListener('click', handleClick)
 })
 
 onUnmounted(() => {
@@ -44,6 +85,11 @@ onUnmounted(() => {
   if (cleanupThemeListener) {
     cleanupThemeListener()
   }
+
+  // 移除交互事件监听
+  document.removeEventListener('focusin', handleFocusIn)
+  document.removeEventListener('focusout', handleFocusOut)
+  document.removeEventListener('click', handleClick)
 })
 
 router.beforeEach((to, from, next) => {
@@ -64,18 +110,23 @@ provide('isLoading', isLoading)
 
 <template>
   <div :class="['app-container', isDarkMode ? 'dark' : 'light']">
+    <!-- 背景图片 -->
+    <div 
+      class="background-image"
+      :class="{ 'blurred': isBackgroundBlurred, 'dark-mode': isDarkMode }"
+    ></div>
+
     <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
       <LanguageSwitcher />
       <ThemeToggle v-model="isDarkMode" />
     </div>
-    <div v-if="isLoading" class="loading-overlay">
-      <div class="loading-spinner"></div>
+    <div class="router-view-wrapper">
+      <RouterView v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" :key="route.fullPath" />
+        </transition>
+      </RouterView>
     </div>
-    <RouterView v-slot="{ Component }">
-      <transition name="fade" mode="out-in">
-        <component :is="Component" :key="route.fullPath" />
-      </transition>
-    </RouterView>
 
     <AlertComponent />
   </div>
@@ -83,19 +134,53 @@ provide('isLoading', isLoading)
 
 <style>
 .app-container {
+  position: relative;
   min-height: 100vh;
   width: 100%;
-  transition: background-color 0.5s ease;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
-.light {
-  @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-white;
+/* 背景图片 */
+.background-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/assets/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  transition: transform 0.5s ease, filter 0.5s ease;
+  will-change: transform, filter;
 }
 
-.dark {
-  @apply bg-gradient-to-br from-gray-900 via-indigo-900 to-black;
+/* 暗色模式下背景变暗 */
+.background-image.dark-mode {
+  filter: brightness(0.6);
 }
 
+.background-image.blurred {
+  transform: scale(1.1);
+  filter: blur(10px);
+}
+
+/* 暗色模式 + 模糊状态 */
+.background-image.dark-mode.blurred {
+  filter: brightness(0.6) blur(10px);
+}
+
+.router-view-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -104,37 +189,5 @@ provide('isLoading', isLoading)
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid #fff;
-  border-top: 3px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
 }
 </style>

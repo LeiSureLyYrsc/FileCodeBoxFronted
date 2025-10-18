@@ -299,10 +299,16 @@
     <transition name="fade">
       <div
         v-if="selectedRecord"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto"
+        class="fixed inset-0 flex items-center justify-center z-50 p-3 sm:p-4 overflow-hidden modal-overlay"
       >
+        <!-- 放大10%的黑色遮罩 -->
+        <div 
+          class="absolute backdrop-overlay"
+          @click="selectedRecord = null"
+        ></div>
+        
         <div
-          class="w-full max-w-2xl rounded-2xl shadow-2xl transform transition-all duration-300 ease-out overflow-hidden"
+          class="w-full max-w-2xl rounded-2xl shadow-2xl transform transition-all duration-300 ease-out overflow-hidden relative z-10"
           :class="[isDarkMode ? 'bg-gray-900 bg-opacity-70' : 'bg-white bg-opacity-95']"
         >
           <!-- 顶部标题栏 -->
@@ -1051,6 +1057,18 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 文件详情弹窗 - 放大10%的黑色遮罩 */
+.backdrop-overlay {
+  position: fixed;
+  top: -5%;
+  left: -5%;
+  width: 110%;
+  height: 110%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition:
