@@ -149,6 +149,42 @@ provide('setBlurLevel', (level: 'none' | 'light' | 'heavy') => {
       </RouterView>
     </div>
 
+    <!-- 页脚 -->
+    <footer class="footer-container">
+      <div class="footer-content">
+        <p class="footer-text">
+          © 2025
+          <a
+            href="https://0d000721.xin/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >
+            LeiSureLyYrsc
+          </a>
+          | Based on
+          <a
+            href="https://github.com/vastsa/FileCodeBox"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >
+            FileCodeBox
+          </a>
+          | 
+          <a
+            href="https://www.gnu.org/licenses/lgpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >
+            LGPL-3.0
+          </a>
+          | Made with ❤️
+        </p>
+      </div>
+    </footer>
+
     <AlertComponent />
   </div>
 </template>
@@ -211,6 +247,67 @@ provide('setBlurLevel', (level: 'none' | 'light' | 'heavy') => {
   min-height: 100vh;
   overflow: hidden;
   z-index: 10;
+}
+
+/* 页脚样式 */
+.footer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.dark .footer-container {
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-text {
+  margin: 0;
+  font-size: 0.875rem;
+  font-family: 'MiSans Bold', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.dark .footer-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 0 0.25rem;
+  border-bottom: 2px solid transparent;
+}
+
+.footer-link:hover {
+  color: #818cf8;
+  border-bottom-color: #818cf8;
+}
+
+.dark .footer-link {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark .footer-link:hover {
+  color: #a5b4fc;
+  border-bottom-color: #a5b4fc;
 }
 
 /* 过渡动画 */
